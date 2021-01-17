@@ -1,227 +1,230 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
-        <title>Create ##templateName##</title>
-        <script src="https://unpkg.com/react@16/umd/react.production.min.js" crossorigin></script>
-        <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js" crossorigin></script>
-        <script src="https://unpkg.com/@material-ui/core@latest/umd/material-ui.production.min.js" crossorigin="anonymous"></script>
-        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-        <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,500,700&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,700&display=swap" rel="stylesheet" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-    </head>
-    <body>
-        <div id="root"></div>
-        <script type="text/babel" crossorigin>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
+    <title>Create ##templateName##</title>
+    <script src="https://unpkg.com/react@16/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js" crossorigin></script>
+    <script
+      src="https://unpkg.com/@material-ui/core@latest/umd/material-ui.production.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel" crossorigin>
 
-            const {
-                createMuiTheme,
-                ThemeProvider,
-                Button,
-                Dialog,
-                DialogContent,
-                DialogContentText,
-                DialogTitle,
-                DialogActions,
-                TextField,
-                Grid,
-                Icon,
-            } = MaterialUI;
+      const {
+          createMuiTheme,
+          ThemeProvider,
+          Button,
+          Dialog,
+          DialogContent,
+          DialogContentText,
+          DialogTitle,
+          DialogActions,
+          TextField,
+          Grid,
+          Icon,
+      } = MaterialUI;
 
-            const FusebitTheme = {
-                ...createMuiTheme({
-                    // Overrides of default MUI theme:
-                    typography: {
-                        fontFamily: '"Nunito Sans", sans-serif'
-                    },
-                    palette: {
-                        primary: {
-                            main: '#03032D' // FusebitColor.black
+      const FusebitTheme = {
+          ...createMuiTheme({
+              // Overrides of default MUI theme:
+              typography: {
+                  fontFamily: '"Nunito Sans", sans-serif'
+              },
+              palette: {
+                  primary: {
+                      main: '#03032D' // FusebitColor.black
 
-                        },
-                        secondary: {
-                            main: '#FB310A' // FusebitColor.red
-                        }
-                    },
-                    overrides: {
-                        MuiTab: {
-                            wrapper: {
-                                fontFamily: '"Poppins", sans-serif'
-                            }
-                        },
-                        MuiButton: {
-                            root: {
-                                borderRadius: "100px"
-                            },
-                            label: {
-                                fontFamily: '"Poppins", sans-serif'
-                            }
-                        }
-                    }
-                })
-            };
+                  },
+                  secondary: {
+                      main: '#FB310A' // FusebitColor.red
+                  }
+              },
+              overrides: {
+                  MuiTab: {
+                      wrapper: {
+                          fontFamily: '"Poppins", sans-serif'
+                      }
+                  },
+                  MuiButton: {
+                      root: {
+                          borderRadius: "100px"
+                      },
+                      label: {
+                          fontFamily: '"Poppins", sans-serif'
+                      }
+                  }
+              }
+          })
+      };
 
 
-            function App() {
-                const returnTo = ##returnTo##;
-                const state = ##state##;
-                const data = ##data##;
-                const [params, setParams] = React.useState({
-                    slack_client_id: '',
-                    slack_client_secret: '',
-                    slack_signing_secret: '',
-                    slack_scope: 'channels:read channels:history chat:write chat:write.public groups:read im:read mpim:read',
-                    slack_user_scope: '',
-                    fusebit_settings_managers: '',
-                    fusebit_allowed_return_to: '*'
-                });
-                const passwordParams = [
-                    'slack_client_secret',
-                    'slack_signing_secret',
-                ];
-                const requiredParams = [
-                    'slack_client_id',
-                    'slack_client_secret',
-                    'slack_scope',
-                    'fusebit_allowed_return_to'
-                ];
+      function App() {
+          const returnTo = ##returnTo##;
+          const state = ##state##;
+          const data = ##data##;
+          const [params, setParams] = React.useState({
+              slack_client_id: '',
+              slack_client_secret: '',
+              slack_signing_secret: '',
+              slack_scope: 'channels:read channels:history chat:write chat:write.public groups:read im:read mpim:read',
+              slack_user_scope: '',
+              fusebit_settings_managers: '',
+              fusebit_allowed_return_to: '*'
+          });
+          const passwordParams = [
+              'slack_client_secret',
+              'slack_signing_secret',
+          ];
+          const requiredParams = [
+              'slack_client_id',
+              'slack_client_secret',
+              'slack_scope',
+              'fusebit_allowed_return_to'
+          ];
 
-                const getReturnUrl = (status, data) => {
-                    let url = `${returnTo}?status=${status}&data=${encodeURIComponent(
-                        btoa(JSON.stringify(data))
-                    )}`;
-                    if (state !== null) {
-                        url += `&state=${encodeURIComponent(state)}`;
-                    }
-                    return url;
-                }
+          const getReturnUrl = (status, data) => {
+              let url = `${returnTo}?status=${status}&data=${encodeURIComponent(
+                  btoa(JSON.stringify(data))
+              )}`;
+              if (state !== null) {
+                  url += `&state=${encodeURIComponent(state)}`;
+              }
+              return url;
+          }
 
-                const handleCancel = () => {
-                    let newData = { status: 400, message: "Connector installation was cancelled" };
-                    window.location.href = getReturnUrl("error", newData);
-                };
+          const handleCancel = () => {
+              let newData = { status: 400, message: "Connector installation was cancelled" };
+              window.location.href = getReturnUrl("error", newData);
+          };
 
-                const handleCreate = () => {
-                    let newData = { ...data };
-                    Object.keys(params).forEach(p => {
-                        if (typeof (params[p]) === 'string') {
-                            if (['fusebit_allowed_return_to', 'fusebit_settings_managers'].indexOf(p) > -1) {
-                                let urls = [];
-                                params[p].split(/[\n ,;]/).forEach(u => {
-                                    if (u.trim()) {
-                                        urls.push(u.trim());
-                                    }
-                                });
-                                newData[p] = urls.join(',');
-                            }
-                            else {
-                                newData[p] = params[p].trim();
-                            }
-                        }
-                    });
-                    window.location.href = getReturnUrl("success", newData);
-                };
+          const handleCreate = () => {
+              let newData = { ...data };
+              Object.keys(params).forEach(p => {
+                  if (typeof (params[p]) === 'string') {
+                      if (['fusebit_allowed_return_to', 'fusebit_settings_managers'].indexOf(p) > -1) {
+                          let urls = [];
+                          params[p].split(/[\n ,;]/).forEach(u => {
+                              if (u.trim()) {
+                                  urls.push(u.trim());
+                              }
+                          });
+                          newData[p] = urls.join(',');
+                      }
+                      else {
+                          newData[p] = params[p].trim();
+                      }
+                  }
+              });
+              window.location.href = getReturnUrl("success", newData);
+          };
 
-                const hasError = () => !!Object.keys(params).find(p =>
-                    typeof params[p] === 'string' && requiredParams.includes(p) && !params[p].trim());
+          const hasError = () => !!Object.keys(params).find(p =>
+              typeof params[p] === 'string' && requiredParams.includes(p) && !params[p].trim());
 
-                const emptyParam = (p) => !!params[p + '_error'];
+          const emptyParam = (p) => !!params[p + '_error'];
 
-                const handleInput = (p) => (event) => {
-                    let newParams = { ...params };
-                    newParams[p] = event.target.value;
-                    newParams[p + '_error'] = newParams[p].trim() === '';
-                    setParams(newParams);
-                };
+          const handleInput = (p) => (event) => {
+              let newParams = { ...params };
+              newParams[p] = event.target.value;
+              newParams[p + '_error'] = newParams[p].trim() === '';
+              setParams(newParams);
+          };
 
-                const getInput = (p, label, description) => (
-                    <Grid item xs={12}>
-                        <TextField
-                            id={p}
-                            label={label}
-                            helperText={(requiredParams.includes(p) && emptyParam(p)) && `Required. ${description}` || description}
-                            error={(requiredParams.includes(p) && emptyParam(p))}
-                            variant="outlined"
-                            value={params[p]}
-                            onChange={handleInput(p)}
-                            fullWidth
-                            type={passwordParams.includes(p) && "password" || undefined}
-                        />
-                    </Grid>
-                );
+          const getInput = (p, label, description) => (
+              <Grid item xs={12}>
+                  <TextField
+                      id={p}
+                      label={label}
+                      helperText={(requiredParams.includes(p) && emptyParam(p)) && `Required. ${description}` || description}
+                      error={(requiredParams.includes(p) && emptyParam(p))}
+                      variant="outlined"
+                      value={params[p]}
+                      onChange={handleInput(p)}
+                      fullWidth
+                      type={passwordParams.includes(p) && "password" || undefined}
+                  />
+              </Grid>
+          );
 
-                return (
-                    <Dialog open={true} fullWidth maxWidth="sm" disableBackdropClick disableEscapeKeyDown>
-                        <DialogTitle>Creating <strong>##templateName##</strong></DialogTitle>
-                        <DialogContent>
-                            <DialogContentText>All configuration parameters specified below can be modified later in the Configuration section of the {data.boundaryId}/{data.functionId} function.</DialogContentText>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12}>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={12}>
-                                            <DialogContentText><strong>NOTE</strong> When registering a Slack App with Slack, configure the following URL as a valid callback URL:<br></br>{
-                                                data.baseUrl
-                                            }/v1/run/{data.subscriptionId}/{data.boundaryId}/{data.functionId}/callback</DialogContentText>
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <DialogContentText><strong>NOTE</strong> If accepting event notifications from Slack, configure the following URL as the Request URL in Slack:<br></br>{
-                                                data.baseUrl
-                                            }/v1/run/{data.subscriptionId}/{data.boundaryId}/{data.functionId}/events</DialogContentText>
-                                        </Grid>
-                                        {getInput('slack_client_id', 'Slack Client ID', 'OAuth client ID of your Slack application')}
-                                        {getInput('slack_client_secret', 'Slack Client Secret', 'OAuth client secret of the Slack application')}
-                                        {getInput('slack_signing_secret', 'Slack Signing Secret', 'Signing secret of the Slack application, can be omitted if not using Events API')}
-                                        {getInput('slack_scope', 'Slack Bot User Token Scopes', 'Default bot OAuth scopes to request, space delimited')}
-                                        {getInput('slack_user_scope', 'Slack User Token Scopes', 'Default user OAuth scopes to request, space delimited. Leave blank to not request User token')}
-                                        <Grid item xs={12}>
-                                            <TextField
-                                                id="fusebit_allowed_return_to"
-                                                label="Allowed returnTo URLs"
-                                                helperText={(emptyParam('fusebit_allowed_return_to') && 'Required. ' || '') + "Allowed returnTo URLs, newline/comma/semicolon/space delimited. You can specify a wildcard (*) at the end of a URL to allow for a prefix match."}
-                                                error={emptyParam('fusebit_allowed_return_to')}
-                                                variant="outlined"
-                                                value={params['fusebit_allowed_return_to']}
-                                                onChange={handleInput('fusebit_allowed_return_to')}
-                                                fullWidth
-                                                multiline
-                                                rows={3}
-                                            />
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <TextField
-                                                id="fusebit_settings_managers"
-                                                label="Settings Managers"
-                                                helperText="URLs of additional settings managers, for example OAuth connector to your home system. Newline/comma/semicolon/space delimited. Settings Managers will be invoked in the order they are listed during the configuration stage of the connector."
-                                                variant="outlined"
-                                                value={params['fusebit_settings_managers']}
-                                                onChange={handleInput('fusebit_settings_managers')}
-                                                fullWidth
-                                                multiline
-                                                rows={3}
-                                                autofocus
-                                            />
-                                        </Grid>
+          return (
+              <Dialog open={true} fullWidth maxWidth="sm" disableBackdropClick disableEscapeKeyDown>
+                  <DialogTitle>Creating <strong>##templateName##</strong></DialogTitle>
+                  <DialogContent>
+                      <DialogContentText>All configuration parameters specified below can be modified later in the Configuration section of the {data.boundaryId}/{data.functionId} function.</DialogContentText>
+                      <Grid container spacing={2}>
+                          <Grid item xs={12}>
+                              <Grid container spacing={2}>
+                                  <Grid item xs={12}>
+                                      <DialogContentText><strong>NOTE</strong> When registering a Slack App with Slack, configure the following URL as a valid callback URL:<br></br>{
+                                          data.baseUrl
+                                      }/v1/run/{data.subscriptionId}/{data.boundaryId}/{data.functionId}/callback</DialogContentText>
+                                  </Grid>
+                                  <Grid item xs={12}>
+                                      <DialogContentText><strong>NOTE</strong> If accepting event notifications from Slack, configure the following URL as the Request URL in Slack:<br></br>{
+                                          data.baseUrl
+                                      }/v1/run/{data.subscriptionId}/{data.boundaryId}/{data.functionId}/events</DialogContentText>
+                                  </Grid>
+                                  {getInput('slack_client_id', 'Slack Client ID', 'OAuth client ID of your Slack application')}
+                                  {getInput('slack_client_secret', 'Slack Client Secret', 'OAuth client secret of the Slack application')}
+                                  {getInput('slack_signing_secret', 'Slack Signing Secret', 'Signing secret of the Slack application, can be omitted if not using Events API')}
+                                  {getInput('slack_scope', 'Slack Bot User Token Scopes', 'Default bot OAuth scopes to request, space delimited')}
+                                  {getInput('slack_user_scope', 'Slack User Token Scopes', 'Default user OAuth scopes to request, space delimited. Leave blank to not request User token')}
+                                  <Grid item xs={12}>
+                                      <TextField
+                                          id="fusebit_allowed_return_to"
+                                          label="Allowed returnTo URLs"
+                                          helperText={(emptyParam('fusebit_allowed_return_to') && 'Required. ' || '') + "Allowed returnTo URLs, newline/comma/semicolon/space delimited. You can specify a wildcard (*) at the end of a URL to allow for a prefix match."}
+                                          error={emptyParam('fusebit_allowed_return_to')}
+                                          variant="outlined"
+                                          value={params['fusebit_allowed_return_to']}
+                                          onChange={handleInput('fusebit_allowed_return_to')}
+                                          fullWidth
+                                          multiline
+                                          rows={3}
+                                      />
+                                  </Grid>
+                                  <Grid item xs={12}>
+                                      <TextField
+                                          id="fusebit_settings_managers"
+                                          label="Settings Managers"
+                                          helperText="URLs of additional settings managers, for example OAuth connector to your home system. Newline/comma/semicolon/space delimited. Settings Managers will be invoked in the order they are listed during the configuration stage of the connector."
+                                          variant="outlined"
+                                          value={params['fusebit_settings_managers']}
+                                          onChange={handleInput('fusebit_settings_managers')}
+                                          fullWidth
+                                          multiline
+                                          rows={3}
+                                          autofocus
+                                      />
+                                  </Grid>
 
-                                    </Grid>
-                                </Grid>
-                            </Grid>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button variant="text" onClick={handleCancel}>Cancel</Button>
-                            <Button variant="contained" color="primary" onClick={handleCreate} disabled={hasError()}>Create</Button>
-                        </DialogActions>
-                    </Dialog>
-                )
-            }
+                              </Grid>
+                          </Grid>
+                      </Grid>
+                  </DialogContent>
+                  <DialogActions>
+                      <Button variant="text" onClick={handleCancel}>Cancel</Button>
+                      <Button variant="contained" color="primary" onClick={handleCreate} disabled={hasError()}>Create</Button>
+                  </DialogActions>
+              </Dialog>
+          )
+      }
 
-            ReactDOM.render(
-                <ThemeProvider theme={FusebitTheme}>
-                    <App />
-                </ThemeProvider>,
-                document.getElementById('root')
-            );
-        </script>
-    </body>
+      ReactDOM.render(
+          <ThemeProvider theme={FusebitTheme}>
+              <App />
+          </ThemeProvider>,
+          document.getElementById('root')
+      );
+    </script>
+  </body>
 </html>
