@@ -2,6 +2,8 @@ const mockConnector = require('..');
 // This is to allow the VendorSlackConnector.js to load @fusebit/slack-connector:
 const connector = mockConnector;
 jest.mock('@fusebit/slack-connector', () => mockConnector, { virtual: true });
+jest.mock('@slack/events-api');
+const { verifyRequestSignature } = require('@slack/events-api');
 
 const { getCredentials, createCtx, cleanup, testBoundaryId, testFunctionId1, testFunctionId2, getStorage } = require('./common');
 const Url = require('url');
@@ -189,6 +191,100 @@ const postNotificationCtx = createCtx(
         path: `/notification1/789`,
     }
 );
+
+const postEventCtx = (body, dispatch) =>
+    createCtx(
+        {
+            method: 'POST',
+            body,
+            configuration: {
+                slack_client_id: '123',
+                slack_client_secret: '456',
+                slack_signing_secret: '789',
+                slack_scope: 'sample-scope',
+                slack_user_scope: 'sample-user-scope',
+                vendor_name: 'Slack',
+                vendor_prefix: 'slack',
+                fusebit_allowed_return_to: '*',
+            },
+            caller: {},
+            query: dispatch ? { dispatch: '1' } : {},
+        },
+        {
+            path: `/event`,
+        }
+    );
+
+const postNotificationToSlackUserCtx = createCtx(
+    {
+        method: 'POST',
+        body: {
+            text: 'hello, world',
+        },
+        configuration: {
+            slack_client_id: '123',
+            slack_client_secret: '456',
+            slack_signing_secret: '789',
+            slack_scope: 'sample-scope',
+            slack_user_scope: 'sample-user-scope',
+            vendor_name: 'Slack',
+            vendor_prefix: 'slack',
+            fusebit_allowed_return_to: '*',
+        },
+        caller: {
+            permissions: {
+                allow: [
+                    {
+                        action: '*',
+                        resource: '/',
+                    },
+                ],
+            },
+        },
+    },
+    {
+        path: `/notification/${encodeURIComponent('t123/user/u890')}`,
+    }
+);
+
+const postNotificationToForeignUserCtx = createCtx(
+    {
+        method: 'POST',
+        body: {
+            text: 'hello, world',
+        },
+        configuration: {
+            slack_client_id: '123',
+            slack_client_secret: '456',
+            slack_signing_secret: '789',
+            slack_scope: 'sample-scope',
+            slack_user_scope: 'sample-user-scope',
+            vendor_name: 'Slack',
+            vendor_prefix: 'slack',
+            fusebit_allowed_return_to: '*',
+        },
+        caller: {
+            permissions: {
+                allow: [
+                    {
+                        action: '*',
+                        resource: '/',
+                    },
+                ],
+            },
+        },
+    },
+    {
+        path: `/notification/foobar/u123`,
+    }
+);
+
+const postNotificationToSlackUserWithErrorCtx = {
+    ...postNotificationToSlackUserCtx,
+    query: {
+        error: '1',
+    },
+};
 
 const deleteUserCtx = createCtx(
     {
@@ -709,5 +805,214 @@ describe('connector', () => {
         expect(body.accessToken).toBe('access-token:abc');
         expect(body.payload).toBeDefined();
         expect(body.payload.text).toBe('hello, world');
+    });
+
+    test('The POST to /notification/* endpoints succeed', async () => {
+        const { VendorSlackConnector } = require('../lib/manager/template/VendorSlackConnector');
+        const accessToken = {
+            bot_user_id: 'b123',
+            authed_user: {
+                access_token: `user-access-token:abc`,
+                id: 'u890',
+            },
+            app_id: 'a123',
+            team: { id: 't123' },
+            // access_token: `bot-access-token:${authorizationCode}`,
+            expires_in: 10000,
+        };
+        const uniqueUserId = 't123/user/u890';
+        class TestSlackConnector extends VendorSlackConnector {
+            async getAuthorizationPageHtml(fusebitContext, authorizationUrl) {
+                return undefined;
+            }
+            async getAccessToken(fusebitContext, authorizationCode, redirectUri) {
+                return {
+                    ...accessToken,
+                    access_token: `bot-access-token:${authorizationCode}`,
+                };
+            }
+            async getUserProfile(tokenContext) {
+                return { id: uniqueUserId };
+            }
+            async sendNotification(fusebitContext, userContext, slack) {
+                if (fusebitContext.query.error !== undefined) {
+                    throw new Error('sendNotification custom error');
+                }
+                return {
+                    status: 200,
+                    body: {
+                        body: fusebitContext.body,
+                        userContext,
+                        slack: {
+                            slack: !!slack,
+                            user: slack && !!slack.user,
+                            bot: slack && !!slack.bot,
+                        },
+                    },
+                };
+            }
+        }
+        const oAuthConnector = new TestSlackConnector();
+        const handler = connector.createSlackConnector(new TestSlackConnector());
+        let ctx = configureCtx;
+        // Initiate the authorization transaction only to extract the 'state' parameter to pass to /callback later
+        let response = await handler(ctx);
+        expect(response.status).toBe(302);
+        expect(response.headers).toBeDefined();
+        expect(typeof response.headers.location).toBe('string');
+        let url = Url.parse(response.headers.location, true);
+        expect(url.query.state).toBeDefined();
+        ctx = callbackCtx(url.query.state);
+        response = await handler(ctx);
+        expect(response.status).toBe(302);
+        // Post notification with Slack user and success
+        ctx = postNotificationToSlackUserCtx;
+        response = await handler(ctx);
+        expect(response.status).toBe(200);
+        expect(typeof response.body).toBe('string');
+        let body = JSON.parse(response.body);
+        expect(body).toMatchObject({
+            body: { text: 'hello, world' },
+            userContext: {
+                foreignOAuthIdentities: { foobar: {} },
+                status: 'authenticated',
+                vendorToken: {
+                    access_token: 'bot-access-token:abc',
+                    app_id: 'a123',
+                    authed_user: {},
+                    bot_user_id: 'b123',
+                    team: {},
+                },
+                vendorUserId: 't123/user/u890',
+                vendorUserProfile: { id: 't123/user/u890' },
+            },
+            slack: { slack: true, user: true, bot: true },
+        });
+        // Post notification with Slack user and error
+        ctx = postNotificationToSlackUserWithErrorCtx;
+        response = await handler(ctx);
+        expect(response.status).toBe(500);
+        expect(typeof response.body).toBe('string');
+        body = JSON.parse(response.body);
+        expect(body).toMatchObject({
+            status: 500,
+            statusCode: 500,
+            message: 'Error sending notification to Slack: sendNotification custom error',
+        });
+        // Post notification with Foreign user and success
+        ctx = postNotificationToForeignUserCtx;
+        response = await handler(ctx);
+        expect(response.status).toBe(200);
+        expect(typeof response.body).toBe('string');
+        body = JSON.parse(response.body);
+        expect(body).toMatchObject({
+            body: { text: 'hello, world' },
+            userContext: {
+                foreignOAuthIdentities: { foobar: {} },
+                status: 'authenticated',
+                vendorToken: {
+                    access_token: 'bot-access-token:abc',
+                    app_id: 'a123',
+                    authed_user: {},
+                    bot_user_id: 'b123',
+                    team: {},
+                },
+                vendorUserId: 't123/user/u890',
+                vendorUserProfile: { id: 't123/user/u890' },
+            },
+            slack: { slack: true, user: true, bot: true },
+        });
+    });
+
+    test('The POST to /event endpoint returns Not Implemented if slack_signing_secret not configured', async () => {
+        const { VendorSlackConnector } = require('../lib/manager/template/VendorSlackConnector');
+        const handler = connector.createSlackConnector(new VendorSlackConnector());
+        // Post notification with Slack user and success
+        let ctx = postEventCtx({});
+        delete ctx.configuration.slack_signing_secret;
+        response = await handler(ctx);
+        expect(response).toBeDefined();
+        expect(response.status).toBe(501);
+        let body = JSON.parse(response.body);
+        expect(body).toMatchObject({
+            status: 501,
+            statusCode: 501,
+            message:
+                "Not implemented. The connector is not configured to receive Slack events. Please specify the 'slack_signing_secret' configuration property and register the Request URL endpoint with Slack.",
+        });
+    });
+
+    test('The POST to /event endpoint returns Not Authorized if Slack security check fails', async () => {
+        const { VendorSlackConnector } = require('../lib/manager/template/VendorSlackConnector');
+        const handler = connector.createSlackConnector(new VendorSlackConnector());
+        // Post notification with Slack user and success
+        let ctx = postEventCtx({});
+        verifyRequestSignature.mockImplementationOnce(() => {
+            throw new Error('Not authorized');
+        });
+        response = await handler(ctx);
+        expect(response).toBeDefined();
+        expect(response.status).toBe(403);
+        let body = JSON.parse(response.body);
+        expect(body).toMatchObject({ status: 403, statusCode: 403, message: 'Not authorized' });
+    });
+
+    test('The POST to /event endpoint succeeds', async () => {
+        const { VendorSlackConnector } = require('../lib/manager/template/VendorSlackConnector');
+        class TestSlackConnector extends VendorSlackConnector {}
+        const oAuthConnector = new TestSlackConnector();
+        const handler = connector.createSlackConnector(new TestSlackConnector());
+        // Post notification with Slack user and success
+        let ctx = postEventCtx({
+            token: '789',
+        });
+        verifyRequestSignature.mockImplementationOnce(() => {});
+        response = await handler(ctx);
+        expect(response).toBeDefined();
+        expect(response.status).toBe(200);
+        expect(response.body).toBe('');
+    });
+
+    test('The POST to /event endpoint calls to getSlackEventResponse and succeeds', async () => {
+        const { VendorSlackConnector } = require('../lib/manager/template/VendorSlackConnector');
+        class TestSlackConnector extends VendorSlackConnector {
+            async getSlackEventResponse(fusebitContext, event) {
+                return { status: 201, body: event };
+            }
+        }
+        const oAuthConnector = new TestSlackConnector();
+        const handler = connector.createSlackConnector(new TestSlackConnector());
+        // Post notification with Slack user and success
+        let ctx = postEventCtx({
+            token: '789',
+        });
+        verifyRequestSignature.mockImplementationOnce(() => {});
+        response = await handler(ctx);
+        expect(response).toBeDefined();
+        expect(response.status).toBe(201);
+        expect(response.body).toBe('{"token":"789"}');
+    });
+
+    test.only('The POST to /event?dispatch endpoint succeeds', async () => {
+        const { VendorSlackConnector } = require('../lib/manager/template/VendorSlackConnector');
+        class TestSlackConnector extends VendorSlackConnector {
+            async onEvent(fusebitContext, event) {
+                return { status: 201, body: event };
+            }
+        }
+        const oAuthConnector = new TestSlackConnector();
+        const handler = connector.createSlackConnector(new TestSlackConnector());
+        // Post notification dispatch with Slack user and success
+        let ctx = postEventCtx(
+            {
+                token: '789',
+            },
+            true
+        );
+        verifyRequestSignature.mockImplementationOnce(() => {});
+        response = await handler(ctx);
+        expect(response).toBeDefined();
+        expect(response.status).toBe(201);
+        expect(response.body).toBe('{"token":"789"}');
     });
 });
