@@ -171,7 +171,7 @@
                                   <Grid item xs={12}>
                                       <DialogContentText><strong>NOTE</strong> If accepting event notifications from Slack, configure the following URL as the Request URL in Slack:<br></br>{
                                           data.baseUrl
-                                      }/v1/run/{data.subscriptionId}/{data.boundaryId}/{data.functionId}/events</DialogContentText>
+                                      }/v1/run/{data.subscriptionId}/{data.boundaryId}/{data.functionId}/event</DialogContentText>
                                   </Grid>
                                   {getInput('slack_client_id', 'Slack Client ID', 'OAuth client ID of your Slack application')}
                                   {getInput('slack_client_secret', 'Slack Client Secret', 'OAuth client secret of the Slack application')}
