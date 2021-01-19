@@ -45,6 +45,10 @@ debug=1 FUSE_PROFILE={profile-name} npm test
 
 ## Release notes
 
+### 1.0.3
+
+- Support test page at /test with an upgrade to @fusebit/oauth-connector to 1.2.0
+
 ### 1.0.2
 
 - Update dependency on @fusebit/oauth-connector to 1.1.1
