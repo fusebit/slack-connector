@@ -45,6 +45,10 @@ debug=1 FUSE_PROFILE={profile-name} npm test
 
 ## Release notes
 
+### 1.0.4
+
+- Fix big in the callback page of /test with upgrade to @fusebit/oauth-connector to 1.2.1
+
 ### 1.0.3
 
 - Support test page at /test with an upgrade to @fusebit/oauth-connector to 1.2.0
