@@ -1,6 +1,6 @@
 {
   "name": "@fusebit/slack-connector",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fusebit Connector for Slack",
   "main": "lib/index.js",
   "license": "MIT",

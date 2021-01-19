@@ -3,6 +3,6 @@
     "node": "10"
   },
   "dependencies": {
-    "@fusebit/slack-connector": "1.0.0"
+    "@fusebit/slack-connector": "1.0.1"
   }
 }

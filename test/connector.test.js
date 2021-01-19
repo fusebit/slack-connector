@@ -143,6 +143,35 @@ const getForeignTokenCtx = createCtx(
   }
 );
 
+const deleteCtx = createCtx(
+  {
+    method: 'DELETE',
+    configuration: {
+      slack_client_id: '123',
+      slack_client_secret: '456',
+      slack_signing_secret: '789',
+      slack_scope: 'sample-scope',
+      slack_user_scope: 'sample-user-scope',
+      vendor_name: 'Slack',
+      vendor_prefix: 'slack',
+      fusebit_allowed_return_to: '*',
+    },
+    caller: {
+      permissions: {
+        allow: [
+          {
+            action: '*',
+            resource: '/',
+          },
+        ],
+      },
+    },
+  },
+  {
+    path: `/`,
+  }
+);
+
 const getHealthCtx = createCtx(
   {
     configuration: {
@@ -939,6 +968,50 @@ describe('connector', () => {
     expect(response.status).toBe(302);
     // Delete the user
     ctx = deleteForeignUserCtx;
+    response = await handler(ctx);
+    expect(response.status).toBe(204);
+    // Validate storage content for the deleted user is deleted
+    response = await getStorage(testBoundaryId, testFunctionId1, oAuthConnector._getStorageIdForVendorUser('789'));
+    expect(response.status).toBe(404);
+    // Validate the GET user returns 404
+    ctx = getUserCtx;
+    response = await handler(ctx);
+    expect(response.status).toBe(404);
+  });
+
+  test('The DELETE / deletes the storage', async () => {
+    const { VendorSlackConnector } = require('../lib/manager/template/VendorSlackConnector');
+    class TestSlackConnector extends VendorSlackConnector {
+      async getAuthorizationPageHtml(fusebitContext, authorizationUrl) {
+        return undefined;
+      }
+      async getAccessToken(fusebitContext, authorizationCode, redirectUri) {
+        return {
+          access_token: `access-token:${authorizationCode}`,
+          expires_in: 10000,
+        };
+      }
+      async getUserProfile(tokenContext) {
+        return { id: '789' };
+      }
+    }
+    const oAuthConnector = new TestSlackConnector();
+    const handler = connector.createSlackConnector(new TestSlackConnector());
+    let ctx = configureCtx;
+    // Initiate the authorization transaction only to extract the 'state' parameter to pass to /callback later
+    let response = await handler(ctx);
+    expect(response.status).toBe(302);
+    expect(response.headers).toBeDefined();
+    expect(typeof response.headers.location).toBe('string');
+    let url = Url.parse(response.headers.location, true);
+    expect(url.query.state).toBeDefined();
+
+    // Create user and validate is is deleted
+    ctx = callbackCtx(url.query.state);
+    response = await handler(ctx);
+    expect(response.status).toBe(302);
+    // Delete the connector
+    ctx = deleteCtx;
     response = await handler(ctx);
     expect(response.status).toBe(204);
     // Validate storage content for the deleted user is deleted
