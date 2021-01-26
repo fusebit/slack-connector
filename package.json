@@ -1,6 +1,6 @@
 {
   "name": "@fusebit/slack-connector",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Fusebit Connector for Slack",
   "main": "lib/index.js",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "@slack/web-api": "^5.11.0",
     "@slack/events-api": "^2.3.4",
     "@fusebit/add-on-sdk": "3.1.0",
-    "@fusebit/oauth-connector": "1.2.1"
+    "@fusebit/oauth-connector": "1.2.5"
   },
   "devDependencies": {
     "prettier": "^2.0.5",
