@@ -58,11 +58,20 @@ const configureCtx = createCtx(
 
 const configureWithSettingsManagerCtx = {
   ...configureCtx,
+  query: {
+    ...configureCtx.query,
+    state: Buffer.from(
+      JSON.stringify({
+        configurationState: 'settingsManagers',
+      })
+    ).toString('base64'),
+  },
   configuration: {
     ...configureCtx.configuration,
     fusebit_settings_managers: 'https://settings.manager.com',
   },
 };
+delete configureWithSettingsManagerCtx.query.returnTo;
 
 const callbackCtx = (state) =>
   createCtx(
@@ -542,8 +551,6 @@ describe('connector', () => {
     expect(url.query.returnTo).toBe(`${configureWithSettingsManagerCtx.baseUrl}/configure`);
     expect(JSON.parse(Buffer.from(url.query.state, 'base64').toString())).toMatchObject({
       configurationState: 'settingsManagers',
-      returnTo: 'https://contoso.com',
-      returnToState: 'abc',
       settingsManagersStage: 1,
     });
     expect(url.query.data).toBe(configureWithSettingsManagerCtx.query.data);

@@ -45,6 +45,10 @@ debug=1 FUSE_PROFILE={profile-name} npm test
 
 ## Release notes
 
+### v1.1.0
+
+- Change order of configuration flow to first ask about Slack authorization before redirecting to additional settings managers.
+
 ### 1.0.5
 
 - Fix refreshToken logic bugs with upgrade to @fusebit/oauth-connector to 1.2.5
