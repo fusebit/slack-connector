@@ -12,7 +12,7 @@ cd slack-connector
 fuse function deploy --boundary managers slack-connector-manager -d ./fusebit
 ```
 
-Soon enough you will be writing code of your integration logic. Get in touch at [Fusebit](https://fusebit.io) for further instructions or to learn more.
+Soon enough you will be writing code of your integration logic. Check out [Fusebit](https://fusebit.io) for further information or [contact us](mailto:contact@fusebit.io) to get started.
 
 ## Organization
 
