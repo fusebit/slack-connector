@@ -45,6 +45,10 @@ debug=1 FUSE_PROFILE={profile-name} npm test
 
 ## Release notes
 
+### v1.1.1
+
+- Update oauth-connector to 1.3.1
+
 ### v1.1.0
 
 - Change order of configuration flow to first ask about Slack authorization before redirecting to additional settings managers.
